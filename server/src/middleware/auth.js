@@ -1,0 +1,3 @@
+import { db } from '../supabase.js';
+export async function auth(req,res,next){const token=req.headers.authorization?.replace('Bearer ','');if(!token)return res.status(401).json({error:'Authentication required'});const {data:{user},error}=await db.auth.getUser(token);if(error||!user)return res.status(401).json({error:'Invalid session'});const {data:profile}=await db.from('profiles').select('*').eq('id',user.id).single();req.user=user;req.profile=profile;next()}
+export function admin(req,res,next){if(req.profile?.role!=='admin')return res.status(403).json({error:'Administrator access required'});next()}
