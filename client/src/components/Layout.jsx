@@ -1,3 +1,52 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { CalendarDays, Building2, LayoutDashboard, Settings, Map, LogOut, Menu, X } from 'lucide-react'; import { useState } from 'react'; import { useAuth } from '../context/AuthContext';
-export default function Layout() { const { profile, signOut } = useAuth(); const [open, setOpen] = useState(false); const nav = useNavigate(); const links=[['/',LayoutDashboard,'Overview'],['/calendar',CalendarDays,'Calendar'],['/rooms',Building2,'Rooms'],['/map',Map,'Floor map']]; if(profile?.role==='admin')links.push(['/admin',Settings,'Administration']); return <div className="shell"><aside className={open?'sidebar open':'sidebar'}><div className="brand"><span>R</span> ReserveFlow</div><nav>{links.map(([to,Icon,label])=><NavLink key={to} to={to} end={to==='/'} onClick={()=>setOpen(false)}><Icon size={19}/>{label}</NavLink>)}</nav><div className="account"><div className="avatar">{profile?.full_name?.[0] || 'U'}</div><div><b>{profile?.full_name || 'Member'}</b><small>{profile?.role || 'user'}</small></div><button aria-label="Sign out" onClick={()=>signOut().then(()=>nav('/login'))}><LogOut size={18}/></button></div></aside><main><header><button className="mobile-menu" onClick={()=>setOpen(!open)}>{open?<X/>:<Menu/>}</button><div><p className="eyebrow">WORKSPACE</p><h1>Room reservations</h1></div><NavLink className="primary" to="/book">+ New reservation</NavLink></header><section className="page"><Outlet/></section></main></div>; }
+import { CalendarDays, Building2, LayoutDashboard, Settings, Map, LogOut, Menu, X } from 'lucide-react';
+import { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
+
+export default function Layout() {
+  const { profile, signOut } = useAuth();
+  const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
+  const links = [
+    ['/', LayoutDashboard, 'Overview'],
+    ['/calendar', CalendarDays, 'Calendar'],
+    ['/rooms', Building2, 'Rooms'],
+    ['/map', Map, 'Floor map'],
+  ];
+
+  if (profile?.role === 'admin') links.push(['/admin', Settings, 'Administration']);
+
+  return <div className="shell">
+    <aside className={open ? 'sidebar open' : 'sidebar'}>
+      <div className="brand"><span>R</span> ReserveFlow</div>
+      <nav>
+        {links.map(([to, Icon, label]) => <NavLink key={to} to={to} end={to === '/'} onClick={() => setOpen(false)}>
+          <Icon size={19} />
+          {label}
+        </NavLink>)}
+      </nav>
+      <div className="account">
+        <div className="avatar">{profile?.full_name?.[0] || 'U'}</div>
+        <div>
+          <b>{profile?.full_name || 'Member'}</b>
+          <small>{profile?.role || 'user'}</small>
+        </div>
+        <button aria-label="Sign out" onClick={() => signOut().then(() => navigate('/login'))}><LogOut size={18} /></button>
+      </div>
+    </aside>
+    {open && <button className="nav-scrim" aria-label="Close navigation" onClick={() => setOpen(false)} />}
+    <main>
+      <header>
+        <button className="mobile-menu" aria-label={open ? 'Close navigation' : 'Open navigation'} onClick={() => setOpen(!open)}>
+          {open ? <X /> : <Menu />}
+        </button>
+        <div>
+          <p className="eyebrow">WORKSPACE</p>
+          <h1>Room reservations</h1>
+        </div>
+        <NavLink className="primary" to="/book">+ New reservation</NavLink>
+      </header>
+      <section className="page"><Outlet /></section>
+    </main>
+  </div>;
+}
