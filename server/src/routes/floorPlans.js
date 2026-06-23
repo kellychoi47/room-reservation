@@ -1,0 +1,12 @@
+import { Router } from 'express';
+import { z } from 'zod';
+import { db } from '../supabase.js';
+import { auth, admin } from '../middleware/auth.js';
+const router = Router(); router.use(auth);
+const schema = z.object({ name: z.string().min(2), building_name: z.string().min(2), floor: z.string().min(1), image_url: z.string().url() });
+router.get('/', async (_req,res,next)=>{try{const {data,error}=await db.from('floor_plans').select('*,rooms(id,name,room_number,capacity,map_x,map_y,is_active)').order('building_name').order('floor');if(error)throw error;res.json(data)}catch(error){next(error)}});
+router.post('/',admin,async(req,res,next)=>{try{const value=schema.parse(req.body);const {data,error}=await db.from('floor_plans').insert(value).select().single();if(error)throw error;res.status(201).json(data)}catch(error){if(error instanceof z.ZodError)return res.status(400).json({error:error.issues[0].message});next(error)}});
+router.patch('/:id',admin,async(req,res,next)=>{try{const value=schema.partial().parse(req.body);const {data,error}=await db.from('floor_plans').update(value).eq('id',req.params.id).select().single();if(error)throw error;res.json(data)}catch(error){next(error)}});
+router.delete('/:id',admin,async(req,res,next)=>{try{const {error}=await db.from('floor_plans').delete().eq('id',req.params.id);if(error)throw error;res.status(204).end()}catch(error){next(error)}});
+router.post('/upload',admin,async(req,res,next)=>{try{const match=String(req.body.image_data||'').match(/^data:(image\/(png|jpeg|webp));base64,(.+)$/);if(!match)return res.status(400).json({error:'Upload a PNG, JPEG, or WebP image.'});const bytes=Buffer.from(match[3],'base64');if(bytes.length>5*1024*1024)return res.status(400).json({error:'Image must be 5 MB or smaller.'});const path=`${crypto.randomUUID()}.${match[2]==='jpeg'?'jpg':match[2]}`;const {error}=await db.storage.from('floor-plans').upload(path,bytes,{contentType:match[1],upsert:false});if(error)throw error;const {data}=db.storage.from('floor-plans').getPublicUrl(path);res.status(201).json({image_url:data.publicUrl})}catch(error){next(error)}});
+export default router;
