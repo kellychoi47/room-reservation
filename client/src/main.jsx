@@ -2,10 +2,12 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { DemoProvider } from './demo/DemoContext';
 import Layout from './components/Layout';
 import Spinner from './components/Spinner';
 import Login from './pages/Login';
 import ResetPassword from './pages/ResetPassword';
+import Demo from './pages/Demo';
 import Dashboard from './pages/Dashboard';
 import Rooms from './pages/Rooms';
 import RoomDetails from './pages/RoomDetails';
@@ -47,6 +49,7 @@ function App() {
   return <Routes>
     <Route path="/login" element={<PublicOnly><Login /></PublicOnly>} />
     <Route path="/reset-password" element={<ResetPassword />} />
+    <Route path="/demo/*" element={<DemoProvider><Demo /></DemoProvider>} />
     <Route element={<Guard><Layout /></Guard>}>
       <Route index element={<Dashboard />} />
       <Route path="rooms" element={<Rooms />} />
